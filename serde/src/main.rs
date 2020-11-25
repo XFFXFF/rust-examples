@@ -18,12 +18,7 @@ struct Move {
     step: u32,
 }
 
-fn main() {
-    let m = Move {
-        direction: Direction::East,
-        step: 5
-    };
-
+fn json_example(m: &Move) {
     let serialized = serde_json::to_string(&m).unwrap();
     let f = File::create("move.txt").unwrap();
     {
@@ -38,4 +33,12 @@ fn main() {
 
     let deserialized: Move = serde_json::from_str(&buffer).unwrap();
     println!("{:?}", deserialized);
+}
+
+fn main() {
+    let m = Move {
+        direction: Direction::East,
+        step: 5
+    };
+    json_example(&m);
 }
