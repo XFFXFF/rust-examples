@@ -1,6 +1,12 @@
+#[macro_use]
+extern crate bson;
 use serde::{Deserialize, Serialize};
 use ron::ser::{to_string_pretty, PrettyConfig};
 use ron::de::from_str;
+use bson::Document;
+// use std::io::Cursor;
+use std::io::Write;
+use std::io::BufWriter;
 use std::io::BufReader;
 use std::fs::File;
 
@@ -15,14 +21,15 @@ enum Direction {
 #[derive(Serialize, Deserialize, Debug)]
 struct Move {
     direction: Direction,
+    #[serde(with = "bson::compat::u2f")]
     step: u32,
 }
 
 fn json_example(m: &Move) {
-    let f = File::create("move.txt").unwrap();
+    let f = File::create("single_move.json").unwrap();
     serde_json::to_writer(f, m).unwrap();
 
-    let f = File::open("move.txt").unwrap();
+    let f = File::open("single_move.json").unwrap();
     let reader = BufReader::new(f);
     let deserialized: Move = serde_json::from_reader(reader).unwrap();
 
@@ -41,6 +48,22 @@ fn ron_example(m: &Move) {
     println!("{:?}", deserialized);
 }
 
+fn bson_example(m: &Move) {
+    let serialized = bson::to_bson(&m).unwrap();
+    let f = File::create("1000_move.bson").unwrap();
+    {
+        let mut writer = BufWriter::new(f);
+        for _ in (0..1000).rev() {
+            serialized.as_document().unwrap().to_writer(&mut writer).unwrap();
+        }
+    }
+
+    let mut f = File::open("1000_move.bson").unwrap();
+    while let Ok(deserialized) = Document::from_reader(&mut f) {
+        println!("{:?}", deserialized);
+    }
+}
+
 fn main() {
     let m = Move {
         direction: Direction::East,
@@ -48,4 +71,5 @@ fn main() {
     };
     json_example(&m);
     ron_example(&m);
+    bson_example(&m);
 }
