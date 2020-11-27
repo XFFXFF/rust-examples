@@ -4,6 +4,7 @@ use ron::de::from_str;
 use bson::Document;
 use rand::Rng;
 use rand::{distributions::{Distribution, Standard}};
+use std::io::Cursor;
 use std::io::BufWriter;
 use std::io::BufReader;
 use std::fs::File;
@@ -57,11 +58,12 @@ impl Distribution<Direction> for Standard {
     }
 }
 
-fn bson_example() {
-    let f = File::create("1000_move.bson").unwrap();
+fn bson_example_to_file() {
+    let size = 10;
+    let f = File::create("10_move.bson").unwrap();
     {
         let mut writer = BufWriter::new(f);
-        for _ in (0..1000).rev() {
+        for _ in (0..size).rev() {
             let rand_direct: Direction = rand::random();
             let rand_step = rand::thread_rng().gen_range(1, 50);
             let m = Move {
@@ -73,19 +75,47 @@ fn bson_example() {
         }
     }
 
-    let mut f = File::open("1000_move.bson").unwrap();
+    let mut f = File::open("10_move.bson").unwrap();
     while let Ok(deserialized) = Document::from_reader(&mut f) {
         let m: Move = bson::from_document(deserialized).unwrap();
-        // println!("{:?}", m);
+        println!("{:?}", m);
     }
 }
+
+fn bson_example_to_vec() {
+    let size = 10;
+    let mut buf: Vec<u8> = Vec::new();
+    for _ in (0..size).rev() {
+        let rand_direct: Direction = rand::random();
+        let rand_step = rand::thread_rng().gen_range(1, 50);
+        let m = Move {
+            direction: rand_direct,
+            step: rand_step
+        };
+        let serialized = bson::to_bson(&m).unwrap();
+        serialized.as_document().unwrap().to_writer(&mut buf).unwrap();
+    }
+
+    let mut cursor = Cursor::new(&buf[..]);
+    for _ in (0..size).rev() {
+        let doc = Document::from_reader(&mut cursor).unwrap();
+        let m: Move = bson::from_document(doc).unwrap();
+        println!("{:?}", m);
+    }
+}
+
 
 fn main() {
     let m = Move {
         direction: Direction::East,
         step: 5
     };
+    println!("json example...");
     json_example(&m);
+    println!("\nron example...");
     ron_example(&m);
-    bson_example();
+    println!("\nbson to file example...");
+    bson_example_to_file();
+    println!("\nbson to vec example...");
+    bson_example_to_vec();
 }
