@@ -15,6 +15,20 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 1024];
 
-    stream.read(&mut buffer).unwrap();
-    println!("{}", String::from_utf8_lossy(&buffer[..]));
+    let size = stream.read(&mut buffer).unwrap();
+    let request = String::from_utf8_lossy(&buffer[..size]);
+    let request = request.replace("\r\n", "");
+    if request.starts_with("PING") {
+        let argument = request.trim_start_matches("PING").trim();
+        if argument.len() == 0 {
+            stream.write(b"+PONG\r\n").unwrap();
+        } else {
+            let mut response = String::from("$");
+            response.push_str(&argument.len().to_string());
+            response.push_str("\r\n");
+            response.push_str(argument);
+            response.push_str("\r\n");
+            stream.write(response.as_bytes()).unwrap();
+        }
+    }
 }
