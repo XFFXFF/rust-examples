@@ -10,5 +10,5 @@ https://github.com/pingcap/talent-plan/blob/master/courses/rust/building-blocks/
 https://github.com/pingcap/talent-plan/blob/master/courses/rust/building-blocks/bb-3.md
 
 ## threadpool
-https://github.com/pingcap/talent-plan/blob/master/courses/rust/building-blocks/bb-4.md
+https://github.com/pingcap/talent-plan/blob/master/courses/rust/building-blocks/bb-4.md  
 https://github.com/rust-threadpool/rust-threadpool
